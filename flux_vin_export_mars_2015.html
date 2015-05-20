@@ -34,7 +34,7 @@
         })
       ];
 
-      var vectorLayerPolygons = new ol.layer.Vector({
+      var vectorLayerArcs = new ol.layer.Vector({
         source: vectorSourcePolygons,
         style: [
           new ol.style.Style({
@@ -46,11 +46,6 @@
         ]
       });
 
-      var vectorLayerPoints = new ol.layer.Vector({
-        source: vectorSourcePoints,
-        style: pointsStyle
-      });
-
       // Instanciate a map and add layers
       var map = new ol.Map({
         target: 'map',
@@ -60,8 +55,8 @@
               layer: 'osm'
             })
           }),
-          vectorLayerPolygons,
-          vectorLayerPoints
+          vectorLayerArcs
+          // ,vectorLayerPoints
         ],
         view: new ol.View({
           center: ol.proj.transform(
@@ -69,7 +64,7 @@
             'EPSG:4326',
             'EPSG:3857'
           ),
-          zoom: 4
+          zoom: 2
         })
       });
 
@@ -88,16 +83,20 @@
         attributes.sort(function(a, b){
           return parseInt(b.value, 10) - parseInt(a.value, 10);
         });
-        var attributes_sliced = attributes.slice(0,10);
+        var attributes_sliced = attributes.slice(0,50);
         
-        console.log(attributes_sliced.length);
+        // console.log(attributes_sliced.length);
+        var max = attributes_sliced[0].value;
+        var ratio = 8 / parseInt(max, 10);
+        console.log(ratio);
         arcs.features.forEach(function(el) {
           // console.log(el.properties.iso_a2);
 
           attributes_sliced.forEach(function(attr) {
             // console.log('test', el.properties.iso_a2, attr.country)
             if (el.properties.iso_a2 === attr.country) {
-              console.log(attr.usup);
+              // console.log(attr.value);
+              el.properties.value = attr.value;
             }
           })
 
@@ -107,27 +106,23 @@
         var quartiers = {};
 
         // console.log(arcs);
-        // vectorLayerPoints.setStyle(function(feature, resolution) {
-        //   if (feature.get('quartier')) {
-        //     if (Object.keys(quartiers).indexOf(feature.get('quartier')) != -1) {
-        //       var randomColor = quartiers[feature.get('quartier')];
-        //       return [new ol.style.Style({
-        //         image: new ol.style.Circle({
-        //           stroke: new ol.style.Stroke({
-        //             color: 'white'
-        //           }),
-        //           fill: new ol.style.Fill({
-        //             color: randomColor
-        //           }),
-        //           radius: 4
-        //         })
-        //       })];
-        //     }
-        //   } else {
-        //     return pointsStyle;
-        //   }
-        // });
-
+        vectorLayerArcs.setStyle(function(feature, resolution) {
+          if (feature.get('value')) {
+            // if (Object.keys(quartiers).indexOf(feature.get('quartier')) != -1) {
+              // var randomColor = quartiers[feature.get('quartier')];
+              console.log('test', parseInt(feature.get('value')), ratio);
+              return [new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                color: 'black',
+                width: ratio * parseInt(feature.get('value'))
+                })
+              })];
+            // }
+          } else {
+            return null;
+          }
+        });
+        
         vectorSourcePolygons.addFeatures(geojsonToFeatures(arcs, {
           featureProjection: 'EPSG:3857'
         }));
