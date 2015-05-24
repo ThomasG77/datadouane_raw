@@ -11,6 +11,7 @@
     "ol.Map#beforeRender",
     "ol.View",
     "ol.View#getCenter",
+    "ol.View#setCenter",
     "ol.control.defaults",
     "ol.layer.Tile",
     "ol.layer.Vector",
