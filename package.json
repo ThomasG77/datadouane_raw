@@ -1,15 +1,70 @@
 {
-  "name": "datadouane",
-  "version": "1.0.0",
-  "description": "",
+  "name": "datadouane_flux_import_export",
+  "version": "0.9.0",
+  "description": "Demo to display flux from douane data",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "napa",
+    "bundle/prod": "npm run minifycss && npm run browserify/prod",
+    "stripdebug": "./node_modules/.bin/strip-debug assets/js/app-debug.js > assets/js/app.js",
+    "browserify/prod": "npm run stripdebug && ./node_modules/.bin/browserify assets/js/app.js | ./node_modules/.bin/uglifyjs > assets/js/bundle.js",
+    "browserify/debug": "./node_modules/.bin/browserify assets/js/app-debug.js > assets/js/bundle.js",
+    "minifycss": "./node_modules/.bin/cleancss -o ./assets/css/styles.min.css node_modules/openlayers/css/ol.css ./node_modules/ol3-popup/src/ol3-popup.css ./assets/css/styles.css",
+    "watch-css": "catw node_modules/openlayers/css/ol.css ./node_modules/ol3-popup/src/ol3-popup.css ./assets/css/styles.css -o ./assets/css/styles.min.css -v",
+    "watch-js": "./node_modules/.bin/beefy assets/js/app-debug.js assets/js/bundle.js --live",
+    "watch": "npm run watch-css && npm run watch-js",
+    "build/lodash": "lodash include=indexBy exports=umd --output assets/vendor/lodash.js",
+    "htmlhint": "node ./node_modules/.bin/htmlhint index.html",
+    "htmlminifier": "./node_modules/.bin/html-minifier -c html-minifier-config.json index.html",
+    "jshint": "./node_modules/.bin/jshint assets/js/app.js",
+    "jscs": "./node_modules/.bin/jscs -c google.json assets/js/app.js",
+    "ol3": "cd node_modules/openlayers && node tasks/build.js ../../ol3-build.json dist/ol.js && cd ../..",
+    "start": "npm run watch-js"
   },
-  "author": "",
-  "license": "ISC",
+  "napa": {
+    "ol3-popup": "https://github.com/walkermatt/ol3-popup"
+  },
+  "browser": {
+    "ol3-popup": "./node_modules/ol3-popup/src/ol3-popup.js",
+    "lodash": "./assets/vendor/lodash.js"
+  },
+  "author": "Thomas Gratier",
+  "license": "MIT",
   "dependencies": {
     "arc": "^0.1.0",
-    "turf": "^2.0.2"
-  }
+    "es6-promise": "^2.1.1",
+    "openlayers": "^3.5.0",
+    "whatwg-fetch": "^0.8.2"
+  },
+  "devDependencies": {
+    "beefy": "^2.1.5",
+    "browserify": "^10.2.1",
+    "catw": "^1.0.0",
+    "clean-css": "^2.2.20",
+    "eslint": "^0.11.0",
+    "html-minifier": "^0.6.9",
+    "htmlhint": "^0.9.6",
+    "jscs": "^1.9.0",
+    "jshint": "^2.7.0",
+    "napa": "^1.2.0",
+    "strip-debug": "^1.1.1",
+    "turf": "^2.0.2",
+    "uglify-js": "^2.4.15",
+    "watchify": "^3.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThomasG77/datadouane_raw.git"
+  },
+  "keywords": [
+    "flux",
+    "geo",
+    "mapping",
+    "openlayers"
+  ],
+  "bugs": {
+    "url": "https://github.com/ThomasG77/datadouane_raw/issues"
+  },
+  "homepage": "https://github.com/ThomasG77/datadouane_raw#readme"
 }
