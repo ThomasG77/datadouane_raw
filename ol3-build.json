@@ -4,6 +4,7 @@
     "ol.Map#addOverlay",
     "ol.Map#forEachFeatureAtPixel",
     "ol.Map#getPixelFromCoordinate",
+    "ol.Map#getCoordinateFromPixel",
     "ol.Map#on",
     "ol.Map#getSize",
     "ol.Map#getView",
