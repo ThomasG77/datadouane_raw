@@ -26,22 +26,53 @@ var fetchJSON = function(url) {
     });
 };
 
+var lineStyle = function lineStyle(width, color) {
+  return new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: color,
+      width: width
+    })
+  });
+};
+
+var createArrowStyle = function createArrowStyle(coordPt, radius, rotation, fillColor, strokeColor) {
+  return new ol.style.Style({
+    geometry: new ol.geom.Point(coordPt),
+    image: new ol.style.RegularShape({
+      fill: new ol.style.Fill({color: fillColor}),
+      points: 3,
+      radius: radius,
+      stroke: new ol.style.Stroke({
+        color: strokeColor
+      }),
+      rotateWithView: false,
+      rotation: -rotation + (Math.PI / 2)
+    })
+  });
+};
+
+var extractRotation = function extractRotation(twoCoordinates) {
+  var start = twoCoordinates[0];
+  var end = twoCoordinates[1];
+  var dx = end[0] - start[0];
+  var dy = end[1] - start[1];
+  return Math.atan2(dy, dx);
+};
+
 // Declare a source for points and drawing
 vectorSourceArcs = new ol.source.Vector({
   format: new ol.format.GeoJSON(),
-  wrapX: false
+  wrapX: false,
+  attributions: [
+      new ol.Attribution({
+        html: 'Données source flux &copy; ' +
+            '<a href="http://www.douane.gouv.fr/services/datadouane" target="_blank">DataDouane</a>'
+      })
+  ]
 });
 
 vectorLayerArcs = new ol.layer.Vector({
-  source: vectorSourceArcs,
-  style: [
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: 'black',
-        width: 1
-      })
-    })
-  ]
+  source: vectorSourceArcs
 });
 
 // Instanciate a map and add layers
@@ -57,7 +88,7 @@ var map = new ol.Map({
   ],
   view: new ol.View({
     center: ol.proj.transform(
-      [-1.5603, 47.2383],
+      [0, 0],
       'EPSG:4326',
       'EPSG:3857'
     ),
@@ -67,6 +98,7 @@ var map = new ol.Map({
 
 var maxLineWidth = 8;
 var maxElement = 50;
+var ratio;
 
 var dataPath = 'assets/data/';
 var arcs = 'arcs_ne_10m_admin_0_countries_from_fr_buffered.json';
@@ -89,57 +121,43 @@ Promise.all([
 
   var hash = {};
   for (var i = 0, len = attributeSliced.length; i < len; i++) {
-    hash[attributeSliced[i].country] = attributeSliced[i];
+    var allAttributes = attributeSliced[i];
+    allAttributes['rank'] = (i + 1).toString();
+    hash[attributeSliced[i].country] = allAttributes;
   }
 
   var max = attributeSliced[0].value;
-  var ratio = maxLineWidth / max;
+  ratio = maxLineWidth / max;
   arcsGeoJSON.features.forEach(function(el) {
     if (hash[el.properties.iso_a2]) {
       el.properties.value = hash[el.properties.iso_a2].value;
+      el.properties.rank = hash[el.properties.iso_a2].rank;
+
     } else {
       el.properties.value = undefined;
+      el.properties.rank = undefined;
     }
   });
 
   vectorLayerArcs.setStyle(function(feature) {
     if (feature.get('value')) {
 
-      var styles = [new ol.style.Style({
-        stroke: new ol.style.Stroke({
-          color: 'black',
-          width: ratio * feature.get('value')
-        })
-      })];
+      var styles = [lineStyle(ratio * feature.get('value'), 'black')];
 
       var coordinates = feature.getGeometry().getCoordinates();
       var twoCoordinates = coordinates.slice(
         coordinates.length - 2,
         coordinates.length
       );
-      var start = twoCoordinates[0];
-      var end = twoCoordinates[1];
-      var dx = end[0] - start[0];
-      var dy = end[1] - start[1];
-      var rotation = Math.atan2(dy, dx);
+      var rotation = extractRotation(twoCoordinates);
       // arrows
       var radius = 6;
       if (ratio * feature.get('value') > 6) {
         radius = ratio * feature.get('value');
       }
-      styles.push(new ol.style.Style({
-        geometry: new ol.geom.Point(end),
-        image: new ol.style.RegularShape({
-          fill: new ol.style.Fill({color: 'black'}),
-          points: 3,
-          radius: radius,
-          stroke: new ol.style.Stroke({
-            color: 'black'
-          }),
-          rotateWithView: false,
-          rotation: -rotation + (Math.PI / 2) //- 15
-        })
-      }));
+      styles.push(
+        createArrowStyle(twoCoordinates[1], radius, rotation, 'black', 'black')
+      );
       return styles;
     } else {
       return null;
@@ -149,43 +167,67 @@ Promise.all([
   vectorSourceArcs.addFeatures(geojsonToFeatures(arcsGeoJSON, {
     featureProjection: 'EPSG:3857'
   }));
-
-  // vectorSourceArcs.getFeatures().forEach(function(el) {
-  //     var start = el[0];
-  //     var end = el[1];
-  //     var dx = end[0] - start[0];
-  //     var dy = end[1] - start[1];
-  //     var rotation = Math.atan2(dy, dx);
-  //     // arrows
-  //     styles.push(new ol.style.Style({
-  //       geometry: new ol.geom.Point(end),
-  //       image: new ol.style.Icon({
-  //         src: 'data/arrow.png',
-  //         anchor: [0.75, 0.5],
-  //         rotateWithView: false,
-  //         rotation: -rotation
-  //       })
-  //     }));
-  // });
 });
 
 var popup = new ol.Overlay.Popup();
 map.addOverlay(popup);
 
+var featureOverlay = new ol.FeatureOverlay({
+  map: map,
+  style: function(feature) {
+    if (feature.get('value')) {
+      var width = (ratio * feature.get('value')) - 2;
+      if (width < 1) {
+        width = 1;
+      }
+      var styles = [lineStyle(width, 'red')];
+
+      var coordinates = feature.getGeometry().getCoordinates();
+      var twoCoordinates = coordinates.slice(
+        coordinates.length - 2,
+        coordinates.length
+      );
+      var rotation = extractRotation(twoCoordinates);
+      // arrows
+      var radius = 6 - 1;
+      if (ratio * feature.get('value') > 6) {
+        radius = (ratio * feature.get('value')) - 1;
+      }
+      styles.push(
+        createArrowStyle(twoCoordinates[1], radius, rotation, 'red', 'red')
+      );
+      return styles;
+    } else {
+      return null;
+    }
+  }
+});
+
+var highlight;
 var displayFeatureInfo = function(evt) {
   var feature = map.forEachFeatureAtPixel(evt.pixel, function(feat) {
     return feat;
   });
   if (feature) {
     var properties = feature.getProperties();
-    console.log(properties);
     popup.show(evt.coordinate,
-      '<div><h2>Coordinates</h2><p>' +
-      properties.name + ' (' + properties.iso_a2 + ') ' +
-      '<br>' + properties.value.toString() +
+      '<div><h3>Export de vin Mars 2015</h3><p>' +
+      '<b>Classement mondial: </b>' + properties.rank + '<br>' +
+       '<b>Pays: </b>' + properties.name + ' (' + properties.iso_a2 + ') ' +
+      '<br><b>Valeur</b> (<i>en kiloEuros</i>): ' +
+      (Math.round(properties.value / 1000 * 1000) / 1000).toString() +
       '</p></div>');
   } else {
     popup.hide();
+  }
+  if (feature !== highlight) {
+    if (highlight) {
+      featureOverlay.removeFeature(highlight);
+    }
+    if (feature) {
+      featureOverlay.addFeature(feature);
+    }
+    highlight = feature;
   }
 };
 

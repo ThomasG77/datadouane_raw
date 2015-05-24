@@ -32,9 +32,13 @@
     "ol.Overlay#getElement",
     "ol.Overlay#getMap",
     "ol.Overlay#getOffset",
+    "ol.FeatureOverlay",
+    "ol.FeatureOverlay#addFeature",
+    "ol.FeatureOverlay#removeFeature",
     "ol.animation.pan",
     "ol.geom.Point",
-    "ol.geom.LineString#getCoordinates"
+    "ol.geom.LineString#getCoordinates",
+    "ol.Attribution"
   ],
   "umd": true,
   "compile": {
