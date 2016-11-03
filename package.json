@@ -34,7 +34,7 @@
   "dependencies": {
     "arc": "^0.1.0",
     "es6-promise": "^2.1.1",
-    "openlayers": "^3.5.0",
+    "openlayers": "~3.5.0",
     "whatwg-fetch": "^0.8.2"
   },
   "devDependencies": {

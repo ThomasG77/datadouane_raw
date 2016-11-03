@@ -80,8 +80,9 @@ var map = new ol.Map({
   target: 'map',
   layers: [
     new ol.layer.Tile({
-      source: new ol.source.MapQuest({
-        layer: 'osm'
+      source: new ol.source.OSM({
+        url: 'http://{a-c}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png',
+        crossOrigin: null
       })
     }),
     vectorLayerArcs

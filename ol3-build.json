@@ -16,7 +16,7 @@
     "ol.layer.Tile",
     "ol.layer.Vector",
     "ol.layer.Vector#setStyle",
-    "ol.source.MapQuest",
+    "ol.source.OSM",
     "ol.source.Vector",
     "ol.source.Vector#addFeatures",
     "ol.style.Style",
